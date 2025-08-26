@@ -35,9 +35,24 @@ class LaravelMultiAuthServiceProvider extends ServiceProvider
                 __DIR__ . '/../stubs/migrations' => database_path('migrations'),
             ], 'multi-auth-migrations');
 
-            // ✅ Publish controllers
+            // ✅ Publish models
             $this->publishes([
-                __DIR__ . '/../stubs/controllers' => app_path('Http/Controllers'),
+                __DIR__ . '/../stubs/models' => database_path('models'),
+            ], 'multi-auth-models');
+
+            // ✅ Publish notifications
+            $this->publishes([
+                __DIR__ . '/../stubs/notifications' => database_path('notifications'),
+            ], 'multi-auth-notifications');
+
+            // ✅ Publish routes
+            $this->publishes([
+                __DIR__ . '/../stubs/routes' => database_path('routes'),
+            ], 'multi-auth-routes');
+
+            // ✅ Publish controllers (case-sensitive fix)
+            $this->publishes([
+                __DIR__ . '/../stubs/Controllers' => app_path('Http/Controllers'),
             ], 'multi-auth-controllers');
 
             // ✅ Register command
