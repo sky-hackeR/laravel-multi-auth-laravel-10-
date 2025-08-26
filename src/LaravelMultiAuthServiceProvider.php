@@ -30,17 +30,15 @@ class LaravelMultiAuthServiceProvider extends ServiceProvider
                 __DIR__ . '/../stubs/views' => resource_path('views/vendor/multiauth'),
             ], 'multi-auth-views');
 
+            // ✅ Publish migrations
+            $this->publishes([
+                __DIR__ . '/../stubs/migrations' => database_path('migrations'),
+            ], 'multi-auth-migrations');
+
             // ✅ Publish controllers
             $this->publishes([
                 __DIR__ . '/../stubs/controllers' => app_path('Http/Controllers'),
             ], 'multi-auth-controllers');
-
-            // ✅ (Optional) Publish migrations only if stubs/migrations exists
-            if (is_dir(__DIR__ . '/../stubs/migrations')) {
-                $this->publishes([
-                    __DIR__ . '/../stubs/migrations' => database_path('migrations'),
-                ], 'multi-auth-migrations');
-            }
 
             // ✅ Register command
             $this->commands([
