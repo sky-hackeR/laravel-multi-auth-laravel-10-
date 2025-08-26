@@ -1,0 +1,18 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
+
+/**
+ * Generated model for multi-auth guard.
+ */
+class {{model}} extends Authenticatable
+{
+    use Notifiable;
+
+    protected $fillable = ['name','email','password'];
+
+    protected $hidden = ['password','remember_token'];
+}

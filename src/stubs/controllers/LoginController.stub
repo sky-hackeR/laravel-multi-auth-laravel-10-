@@ -1,0 +1,54 @@
+<?php
+
+namespace App\Http\Controllers\{{Guard}}\Auth;
+
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+
+/**
+ * Custom multi-guard login controller (no Laravel trait).
+ * Forked/upgraded by SkyHackeR. Original: Al Amin Firdows
+ */
+class LoginController extends Controller
+{
+    protected $redirectTo = '/{{guard}}/home';
+
+    public function __construct()
+    {
+        $this->middleware('guest:{{guard}}')->except('logout');
+    }
+
+    public function showLoginForm()
+    {
+        return view('{{guard}}.auth.login');
+    }
+
+    public function login(Request $request)
+    {
+        $credentials = $request->validate([
+            'email' => 'required|email',
+            'password' => 'required|string',
+        ]);
+
+        if (Auth::guard('{{guard}}')->attempt($credentials, $request->filled('remember'))) {
+            $request->session()->regenerate();
+            return redirect()->intended($this->redirectTo);
+        }
+
+        return back()->withErrors(['email' => 'Invalid credentials.']);
+    }
+
+    public function logout(Request $request)
+    {
+        Auth::guard('{{guard}}')->logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        if (method_exists($this, 'logoutToPath')) {
+            return redirect($this->logoutToPath());
+        }
+
+        return redirect()->route('{{guard}}.login');
+    }
+}
