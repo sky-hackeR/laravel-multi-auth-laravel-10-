@@ -13,33 +13,34 @@ class LaravelMultiAuthServiceProvider extends ServiceProvider
 {
     public function register()
     {
-        $this->mergeConfigFrom(__DIR__ . '/../../config/multiauth.php', 'multiauth');
+        // Merge package config with app config
+        $this->mergeConfigFrom(__DIR__ . '/../config/multiauth.php', 'multiauth');
     }
 
     public function boot()
     {
         if ($this->app->runningInConsole()) {
-            // publish config
+            // ✅ Publish config
             $this->publishes([
-                __DIR__ . '/../stubs/config/multiauth.php' => config_path('multiauth.php'),
+                __DIR__ . '/../config/multiauth.php' => config_path('multiauth.php'),
             ], 'multi-auth-config');
 
-            // publish views (vendor/multiauth)
+            // ✅ Publish views
             $this->publishes([
                 __DIR__ . '/stubs/views' => resource_path('views/vendor/multiauth'),
             ], 'multi-auth-views');
 
-            // publish migration stubs (so devs can see them)
+            // ✅ Publish migrations
             $this->publishes([
                 __DIR__ . '/stubs/migrations' => database_path('migrations'),
             ], 'multi-auth-migrations');
 
-            // publish controllers
+            // ✅ Publish controllers
             $this->publishes([
                 __DIR__ . '/stubs/controllers' => app_path('Http/Controllers'),
             ], 'multi-auth-controllers');
 
-            // Register command
+            // ✅ Register command
             $this->commands([
                 InstallMultiAuthCommand::class,
             ]);
