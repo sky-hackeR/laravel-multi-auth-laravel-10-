@@ -20,42 +20,42 @@ class LaravelMultiAuthServiceProvider extends ServiceProvider
     public function boot()
     {
         if ($this->app->runningInConsole()) {
-            // ✅ Publish config
+            // Publish config
             $this->publishes([
                 __DIR__ . '/../config/multiauth.php' => config_path('multiauth.php'),
             ], 'multi-auth-config');
 
-            // ✅ Publish views
+            // Publish views
             $this->publishes([
                 __DIR__ . '/../stubs/views' => resource_path('views/vendor/multiauth'),
             ], 'multi-auth-views');
 
-            // ✅ Publish migrations
+            // Publish migrations
             $this->publishes([
                 __DIR__ . '/../stubs/migrations' => database_path('migrations'),
             ], 'multi-auth-migrations');
 
-            // ✅ Publish models
+            // Publish models
             $this->publishes([
-                __DIR__ . '/../stubs/models' => database_path('models'),
+                __DIR__ . '/../stubs/models' => app_path('Models'),
             ], 'multi-auth-models');
 
-            // ✅ Publish notifications
+            // Publish notifications
             $this->publishes([
-                __DIR__ . '/../stubs/notifications' => database_path('notifications'),
+                __DIR__ . '/../stubs/notifications' => app_path('Notifications'),
             ], 'multi-auth-notifications');
 
-            // ✅ Publish routes
+            // Publish routes
             $this->publishes([
-                __DIR__ . '/../stubs/routes' => database_path('routes'),
+                __DIR__ . '/../stubs/routes' => base_path('routes'),
             ], 'multi-auth-routes');
 
-            // ✅ Publish controllers (case-sensitive fix)
+            // Publish controllers
             $this->publishes([
                 __DIR__ . '/../stubs/Controllers' => app_path('Http/Controllers'),
             ], 'multi-auth-controllers');
 
-            // ✅ Register command
+            // Register command
             $this->commands([
                 InstallMultiAuthCommand::class,
             ]);
