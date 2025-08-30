@@ -6,13 +6,9 @@ use Illuminate\Console\Command;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Str;
 
-/**
- * Forked and upgraded for Laravel 10 by SkyHackeR
- * Original author: Al Amin Firdows
- */
 class InstallMultiAuthCommand extends Command
 {
-    protected $signature = 'laravel-multi-auth:install {guards*} {--f|force} {--model} {--views} {--routes}';
+    protected $signature = 'laravel-multi-auth:install {guards*} {--f|force}';
     protected $description = 'Install Multi Auth scaffolding for given guard(s). Example: php artisan laravel-multi-auth:install admin';
 
     protected Filesystem $files;
@@ -25,29 +21,28 @@ class InstallMultiAuthCommand extends Command
 
     public function handle()
     {
-        $guards = $this->argument('guards');
-        $force = $this->option('force');
-
-        if (! $force) {
-            $this->error('This command must be run with -f to confirm. Use --help for options.');
+        if (!$this->option('force')) {
+            $this->error('You must use -f to confirm. Use --help for details.');
             return 1;
         }
 
-        foreach ($guards as $guardRaw) {
-            $guard = Str::of($guardRaw)->trim()->lower()->__toString();
-            $this->info("Scaffolding guard: {$guard}");
+        foreach ($this->argument('guards') as $guardRaw) {
+            $guard = Str::lower(trim($guardRaw));
+            $studly = Str::studly($guard);
+            $this->info("Setting up guard: {$guard}");
 
             $this->createModel($guard);
             $this->createMigration($guard);
             $this->createControllers($guard);
             $this->createViews($guard);
-            $this->createRoutesFile($guard);
+            $this->createRouteFile($guard); 
+            $this->appendRoutesToWeb($guard);
             $this->appendAuthConfig($guard);
 
-            $this->info("Finished scaffolding '{$guard}'.");
+            $this->info("Finished scaffolding '{$guard}'");
         }
 
-        $this->info('All done. Please review generated files and run: php artisan migrate');
+        $this->info('All done! Review files and run: php artisan migrate');
         return 0;
     }
 
@@ -56,12 +51,12 @@ class InstallMultiAuthCommand extends Command
         $modelClass = Str::studly($guard);
         $path = app_path("Models/{$modelClass}.php");
 
-        if ($this->files->exists($path)) {
-            $this->warn("Model already exists: {$path}");
+        if ($this->files->exists($path) && !$this->option('force')) {
+            $this->warn("Model exists: {$path}");
             return;
         }
 
-        $stub = $this->getStub('model.stub');
+        $stub = $this->getStub('models/model.stub', true);
         $stub = str_replace('{{model}}', $modelClass, $stub);
 
         $this->ensureDirectory(app_path('Models'));
@@ -71,11 +66,16 @@ class InstallMultiAuthCommand extends Command
 
     protected function createMigration(string $guard)
     {
-        $table = $guard . 's';
+        $table = Str::plural($guard);
         $timestamp = date('Y_m_d_His');
         $file = database_path("migrations/{$timestamp}_create_{$table}_table.php");
 
-        $stub = $this->getStub('migration.stub');
+        if ($this->migrationExists($table) && !$this->option('force')) {
+            $this->warn("Migration for '{$table}' already exists. Skipping.");
+            return;
+        }
+
+        $stub = $this->getStub('migrations/migration.stub', true);
         $stub = str_replace('{{table}}', $table, $stub);
 
         $this->files->put($file, $stub);
@@ -96,108 +96,140 @@ class InstallMultiAuthCommand extends Command
         ];
 
         foreach ($controllerStubs as $stubFile) {
-            $content = $this->getStub("controllers/{$stubFile}");
-            $content = str_replace(['{{guard}}', '{{Guard}}'], [$guard, $studly], $content);
             $target = "{$baseDir}/" . str_replace('.stub', '.php', $stubFile);
+            if ($this->files->exists($target) && !$this->option('force')) {
+                $this->warn("Controller exists: {$target}");
+                continue;
+            }
+
+            $content = $this->getStub("controllers/{$stubFile}", true);
+            $content = str_replace(['{{guard}}', '{{Guard}}'], [$guard, $studly], $content);
+
             $this->files->put($target, $content);
             $this->info("Controller created: {$target}");
         }
     }
 
-    protected function createViews(string $guard)
-    {
-        $viewDir = resource_path("views/{$guard}/auth");
-        $this->ensureDirectory($viewDir);
+    protected function createViews(string $guard){
+        $studly = Str::studly($guard);
 
+        // Base directories
+        $baseViewDir   = resource_path("views/{$guard}");
+        $authDir       = "{$baseViewDir}/auth";
+        $passwordsDir  = "{$authDir}/passwords";
+        $layoutDir     = "{$baseViewDir}/layout";
+
+        $this->ensureDirectory($authDir);
+        $this->ensureDirectory($passwordsDir);
+        $this->ensureDirectory($layoutDir);
+
+        // Map stubs to blade view paths
         $views = [
-            'login.blade.stub' => 'login.blade.php',
-            'register.blade.stub' => 'register.blade.php',
-            'passwords/email.blade.stub' => 'passwords/email.blade.php',
-            'passwords/reset.blade.stub' => 'passwords/reset.blade.php'
+            'auth/login.blade.stub'             => "{$authDir}/login.blade.php",
+            'auth/register.blade.stub'          => "{$authDir}/register.blade.php",
+            'auth/passwords/email.blade.stub'   => "{$passwordsDir}/email.blade.php",
+            'auth/passwords/reset.blade.stub'   => "{$passwordsDir}/reset.blade.php",
+            'layout/auth.blade.stub'            => "{$layoutDir}/auth.blade.php",
+            'home.blade.stub'                   => "{$baseViewDir}/home.blade.php",
         ];
 
-        foreach ($views as $stub => $targetName) {
-            $content = $this->getStub("views/{$stub}");
-            $content = str_replace('{{guard}}', $guard, $content);
-            $filePath = $viewDir . '/' . $targetName;
-            $this->ensureDirectory(dirname($filePath));
-            $this->files->put($filePath, $content);
-            $this->info("View created: {$filePath}");
-        }
+        foreach ($views as $stub => $targetPath) {
+            if ($this->files->exists($targetPath) && !$this->option('force')) {
+                $this->warn("View exists: {$targetPath}");
+                continue;
+            }
 
-        // Optionally create a simple home view so middleware redirect has something
-        $homePath = resource_path("views/{$guard}/home.blade.php");
-        if (!$this->files->exists($homePath)) {
-            $this->files->put($homePath, "<h1>" . Str::studly($guard) . " Home</h1>");
-            $this->info("Home view created: {$homePath}");
+            $content = $this->getStub("views/{$stub}", true);
+            $content = str_replace(
+                ['{{guard}}', '{{Guard}}'],
+                [$guard, $studly],
+                $content
+            );
+
+            $this->files->put($targetPath, $content);
+            $this->info("View created: {$targetPath}");
         }
     }
 
-    protected function createRoutesFile(string $guard)
-    {
-        $routesDir = base_path('routes');
-        $file = "{$routesDir}/{$guard}.php";
-        $stub = $this->getStub('routes.stub');
-        $stub = str_replace(['{{guard}}', '{{Guard}}'], [$guard, Str::studly($guard)], $stub);
 
-        if (! $this->files->exists($file)) {
-            $this->files->put($file, $stub);
-            $this->info("Route file created: {$file}");
-        } else {
-            $this->warn("Route file already exists: {$file}");
+
+    protected function createRouteFile(string $guard)
+    {
+        $routePath = base_path("routes/{$guard}.php");
+        if ($this->files->exists($routePath) && !$this->option('force')) {
+            $this->warn("Route file exists: {$routePath}");
+            return;
         }
 
-        // append include to routes/web.php if not present
-        $web = base_path('routes/web.php');
-        if ($this->files->exists($web)) {
-            $includeLine = "require base_path('routes/{$guard}.php');";
-            $webContent = $this->files->get($web);
-            if (strpos($webContent, "routes/{$guard}.php") === false) {
-                $this->files->append($web, PHP_EOL . $includeLine . PHP_EOL);
-                $this->info("Appended include to routes/web.php");
-            }
+        $stub = $this->getStub('routes/routefile.stub', true);
+        $stub = str_replace('{{guard}}', $guard, $stub);
+
+        $this->files->put($routePath, $stub);
+        $this->info("Created route file: {$routePath}");
+    }
+
+    protected function appendRoutesToWeb(string $guard)
+    {
+        $studly = Str::studly($guard);
+        $webPath = base_path('routes/web.php');
+
+        $webContent = $this->files->get($webPath);
+        $requireLine = "require base_path('routes/{$guard}.php');";
+
+        if (!str_contains($webContent, $requireLine)) {
+            $this->files->append($webPath, "\n{$requireLine}\n");
+            $this->info("Added require for {$guard}.php in web.php");
+        }
+
+        $stub = $this->getStub('routes/web.stub', true);
+        $stub = str_replace(['{{guard}}', '{{Guard}}'], [$guard, $studly], $stub);
+
+        if (!str_contains($webContent, "{$studly} Auth Routes")) {
+            $this->files->append($webPath, "\n{$stub}\n");
+            $this->info("Added {$studly} auth routes to web.php");
         } else {
-            $this->warn("routes/web.php not found. Please include routes/{$guard}.php manually.");
+            $this->warn("Auth routes for {$studly} already exist in web.php");
         }
     }
 
     protected function appendAuthConfig(string $guard)
     {
         $authPath = config_path('auth.php');
-        if (! $this->files->exists($authPath)) {
-            $this->error('config/auth.php not found. Are you running this inside a Laravel application?');
+        if (!$this->files->exists($authPath)) {
+            $this->error('config/auth.php not found.');
             return;
         }
 
         $content = $this->files->get($authPath);
+        $model = "App\\\\Models\\\\" . Str::studly($guard);
 
-        // add guard
-        if (strpos($content, "'{$guard}' => [") === false) {
+        if (!str_contains($content, "'{$guard}' => [")) {
             $guardSnippet = "\n        '{$guard}' => [\n            'driver' => 'session',\n            'provider' => '{$guard}s',\n        ],\n";
             $content = preg_replace("/('guards'\\s*=>\\s*\\[)/", "$1" . $guardSnippet, $content, 1);
         }
 
-        // add provider
-        if (strpos($content, "'{$guard}s' => [") === false) {
-            $providerSnippet = "\n        '{$guard}s' => [\n            'driver' => 'eloquent',\n            'model' => App\\\\Models\\\\" . Str::studly($guard) . "::class,\n        ],\n";
+        if (!str_contains($content, "'{$guard}s' => [")) {
+            $providerSnippet = "\n        '{$guard}s' => [\n            'driver' => 'eloquent',\n            'model' => {$model}::class,\n        ],\n";
             $content = preg_replace("/('providers'\\s*=>\\s*\\[)/", "$1" . $providerSnippet, $content, 1);
         }
 
-        // add password broker into 'passwords' array if not exists
-        if (strpos($content, "'passwords' => [") !== false && strpos($content, "'{$guard}s' => [") === false) {
+        if (!str_contains($content, "'{$guard}s' => [")) {
             $passwordSnippet = "\n        '{$guard}s' => [\n            'provider' => '{$guard}s',\n            'table' => 'password_resets',\n            'expire' => 60,\n            'throttle' => 60,\n        ],\n";
             $content = preg_replace("/('passwords'\\s*=>\\s*\\[)/", "$1" . $passwordSnippet, $content, 1);
         }
 
         $this->files->put($authPath, $content);
-        $this->info('Updated config/auth.php (guards/providers/passwords).');
+        $this->info('Updated config/auth.php (guards, providers, passwords)');
     }
 
-    protected function getStub($name)
+    protected function getStub($name, $required = false)
     {
         $path = __DIR__ . '/../stubs/' . ltrim($name, '/');
-        if (! $this->files->exists($path)) {
-            $this->error("Stub not found: {$path}");
+        if (!$this->files->exists($path)) {
+            if ($required) {
+                $this->error("Required stub not found: {$path}");
+                exit(1);
+            }
             return '';
         }
         return $this->files->get($path);
@@ -205,8 +237,13 @@ class InstallMultiAuthCommand extends Command
 
     protected function ensureDirectory($path)
     {
-        if (! $this->files->isDirectory($path)) {
+        if (!$this->files->isDirectory($path)) {
             $this->files->makeDirectory($path, 0755, true);
         }
+    }
+
+    protected function migrationExists($table): bool
+    {
+        return !empty(glob(database_path("migrations/*_create_{$table}_table.php")));
     }
 }

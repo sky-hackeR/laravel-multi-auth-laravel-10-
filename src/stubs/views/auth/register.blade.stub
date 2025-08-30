@@ -1,20 +1,24 @@
-@extends('layouts.app')
+@extends('{{guard}}.layout.auth')
 
 @section('content')
 <div class="container py-5">
     <div class="row justify-content-center">
         <div class="col-md-6">
             <div class="card">
-                <div class="card-header">Reset Password - {{ ucfirst('{{guard}}') }}</div>
+                <div class="card-header">Register - {{ ucfirst('{{guard}}') }}</div>
 
                 <div class="card-body">
-                    <form method="POST" action="{{ route('{{guard}}.password.update') }}">
+                    <form method="POST" action="{{ route('{{guard}}.register.post') }}">
                         @csrf
-                        <input type="hidden" name="token" value="{{ $token }}">
+
+                        <div class="mb-3">
+                            <label class="form-label">Name</label>
+                            <input class="form-control" type="text" name="name" required>
+                        </div>
 
                         <div class="mb-3">
                             <label class="form-label">Email</label>
-                            <input class="form-control" type="email" name="email" value="{{ old('email') }}" required>
+                            <input class="form-control" type="email" name="email" required>
                         </div>
 
                         <div class="mb-3">
@@ -28,7 +32,7 @@
                         </div>
 
                         <div class="d-grid">
-                            <button class="btn btn-primary" type="submit">Reset Password</button>
+                            <button class="btn btn-success" type="submit">Register</button>
                         </div>
                     </form>
                 </div>

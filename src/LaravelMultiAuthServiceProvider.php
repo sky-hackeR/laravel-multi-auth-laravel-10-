@@ -17,8 +17,7 @@ class LaravelMultiAuthServiceProvider extends ServiceProvider
         $this->mergeConfigFrom(__DIR__ . '/../config/multiauth.php', 'multiauth');
     }
 
-    public function boot()
-    {
+    public function boot(){
         if ($this->app->runningInConsole()) {
             // Publish config
             $this->publishes([
@@ -27,32 +26,32 @@ class LaravelMultiAuthServiceProvider extends ServiceProvider
 
             // Publish views
             $this->publishes([
-                __DIR__ . '/../stubs/views' => resource_path('views/vendor/multiauth'),
+                __DIR__ . '/stubs/views' => resource_path('views/vendor/multiauth'),
             ], 'multi-auth-views');
 
             // Publish migrations
             $this->publishes([
-                __DIR__ . '/../stubs/migrations' => database_path('migrations'),
+                __DIR__ . '/stubs/migrations' => database_path('migrations'),
             ], 'multi-auth-migrations');
 
             // Publish models
             $this->publishes([
-                __DIR__ . '/../stubs/models' => app_path('Models'),
+                __DIR__ . '/stubs/models' => app_path('Models'),
             ], 'multi-auth-models');
 
             // Publish notifications
             $this->publishes([
-                __DIR__ . '/../stubs/notifications' => app_path('Notifications'),
+                __DIR__ . '/stubs/notifications' => app_path('Notifications'),
             ], 'multi-auth-notifications');
 
             // Publish routes
             $this->publishes([
-                __DIR__ . '/../stubs/routes' => base_path('routes'),
+                __DIR__ . '/stubs/routes' => base_path('routes'),
             ], 'multi-auth-routes');
 
             // Publish controllers
             $this->publishes([
-                __DIR__ . '/../stubs/Controllers' => app_path('Http/Controllers'),
+                __DIR__ . '/stubs/controllers' => app_path('Http/Controllers'),
             ], 'multi-auth-controllers');
 
             // Register command
@@ -61,4 +60,5 @@ class LaravelMultiAuthServiceProvider extends ServiceProvider
             ]);
         }
     }
+
 }
