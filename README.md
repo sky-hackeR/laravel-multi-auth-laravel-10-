@@ -51,7 +51,7 @@ config/multiauth.php
 Scaffold a new guard (e.g., **Admin**):
 
 ```bash
-php artisan multiauth:install Admin
+php artisan laravel-multi-auth:install Admin -f
 ```
 
 This will:  
@@ -72,7 +72,7 @@ php artisan migrate
 ## ⚡ Example
 
 ```bash
-php artisan multiauth:install Teacher
+php artisan laravel-multi-auth:install Teacher -f
 ```
 
 - Model: `App\Models\Teacher`
@@ -93,14 +93,14 @@ You can define default guards in **`config/multiauth.php`**:
 ],
 ```
 
-Running `php artisan multiauth:install` without args will scaffold these.
+Running `php artisan laravel-multi-auth:install -f` without args will scaffold these.
 
 ---
 
 ## 🛠 Development Notes
 
 - Only `config/multiauth.php` is published by default.  
-- All scaffolding (models, routes, controllers, etc.) is handled by the `multiauth:install` command.  
+- All scaffolding (models, routes, controllers, etc.) is handled by the `multi-auth:install` command.  
 - Keeps your app clean and avoids dumping unnecessary stubs.  
 
 ---
