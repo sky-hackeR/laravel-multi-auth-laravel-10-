@@ -109,8 +109,3 @@ Running `php artisan multiauth:install` without args will scaffold these.
 
 Pull requests are welcome! For major changes, please open an issue first to discuss what you’d like to change.  
 
----
-
-## 📄 License
-
-MIT License.  
