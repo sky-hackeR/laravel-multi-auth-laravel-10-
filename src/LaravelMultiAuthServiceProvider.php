@@ -25,34 +25,34 @@ class LaravelMultiAuthServiceProvider extends ServiceProvider
             ], 'multi-auth-config');
 
             // Publish views
-            $this->publishes([
-                __DIR__ . '/stubs/views' => resource_path('views/vendor/multiauth'),
-            ], 'multi-auth-views');
+            // $this->publishes([
+            //     __DIR__ . '/stubs/views' => resource_path('views/vendor/multiauth'),
+            // ], 'multi-auth-views');
 
             // Publish migrations
-            $this->publishes([
-                __DIR__ . '/stubs/migrations' => database_path('migrations'),
-            ], 'multi-auth-migrations');
+            // $this->publishes([
+            //     __DIR__ . '/stubs/migrations' => database_path('migrations'),
+            // ], 'multi-auth-migrations');
 
             // Publish models
-            $this->publishes([
-                __DIR__ . '/stubs/models' => app_path('Models'),
-            ], 'multi-auth-models');
+            // $this->publishes([
+            //     __DIR__ . '/stubs/models' => app_path('Models'),
+            // ], 'multi-auth-models');
 
             // Publish notifications
-            $this->publishes([
-                __DIR__ . '/stubs/notifications' => app_path('Notifications'),
-            ], 'multi-auth-notifications');
+            // $this->publishes([
+            //     __DIR__ . '/stubs/notifications' => app_path('Notifications'),
+            // ], 'multi-auth-notifications');
 
             // Publish routes
-            $this->publishes([
-                __DIR__ . '/stubs/routes' => base_path('routes'),
-            ], 'multi-auth-routes');
+            // $this->publishes([
+            //     __DIR__ . '/stubs/routes' => base_path('routes'),
+            // ], 'multi-auth-routes');
 
             // Publish controllers
-            $this->publishes([
-                __DIR__ . '/stubs/controllers' => app_path('Http/Controllers'),
-            ], 'multi-auth-controllers');
+            // $this->publishes([
+            //     __DIR__ . '/stubs/controllers' => app_path('Http/Controllers'),
+            // ], 'multi-auth-controllers');
 
             // Register command
             $this->commands([
