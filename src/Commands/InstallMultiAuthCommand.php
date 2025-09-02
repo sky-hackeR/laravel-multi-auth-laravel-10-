@@ -130,7 +130,6 @@ class InstallMultiAuthCommand extends Command
             'auth/passwords/email.blade.stub'   => "{$passwordsDir}/email.blade.php",
             'auth/passwords/reset.blade.stub'   => "{$passwordsDir}/reset.blade.php",
             'layout/auth.blade.stub'            => "{$layoutDir}/auth.blade.php",
-            'home.blade.stub'                   => "{$baseViewDir}/home.blade.php",
         ];
 
         foreach ($views as $stub => $targetPath) {
