@@ -8,7 +8,7 @@
                 <div class="card-header">Register - {{ ucfirst('{{guard}}') }}</div>
 
                 <div class="card-body">
-                    <form method="POST" action="{{ route('{{guard}}.register.post') }}">
+                    <form method="POST" action="{{ url('/{{guard}}/register') }}">
                         @csrf
 
                         <div class="mb-3">

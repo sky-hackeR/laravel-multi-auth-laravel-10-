@@ -12,7 +12,7 @@
                         <div class="alert alert-success">{{ session('status') }}</div>
                     @endif
 
-                    <form method="POST" action="{{ route('{{guard}}.password.email') }}">
+                    <form method="POST" action="{{ url('/{{guard}}/password/email') }}">
                         @csrf
                         <div class="mb-3">
                             <label class="form-label">Email</label>
